@@ -1,9 +1,11 @@
 use rdev::{simulate, Button, EventType, SimulateError};
 use std::{thread, time::Duration};
-use winapi::um::winuser::{FindWindowA, GetWindowRect};
+use winapi::um::winuser::{FindWindowA, GetForegroundWindow, GetWindowRect};
 use winapi::shared::windef::RECT;
 use std::ptr::null_mut;
 use std::ffi::CString;
+
+// TODO: make this an "app"
 
 fn find_window_pos(window_name: &str) -> Option<RECT> {
     unsafe {
@@ -23,6 +25,21 @@ fn find_window_pos(window_name: &str) -> Option<RECT> {
     }
 }
 
+fn is_window_active(window_name: &str) -> bool {
+    unsafe {
+        let cstr = CString::new(window_name).ok()?;
+        let target_h_w_n_d = FindWindowA(null_mut(), cstr.as_ptr());
+
+        if target_h_w_n_d.is_null() {
+            return false;
+        }
+
+        let foreground_h_w_n_d = GetForegroundWindow();
+
+        target_h_w_n_d == foreground_h_w_n_d
+    }
+}
+
 fn click_at(x: f64, y: f64) -> Result<(), SimulateError> {
     simulate(&EventType::MouseMove { x, y })?;
     simulate(&EventType::ButtonPress(Button::Left))?;
@@ -30,21 +47,30 @@ fn click_at(x: f64, y: f64) -> Result<(), SimulateError> {
 }
 
 fn main() {
+
     let process_name = "Banana";
     let wait_duration = Duration::from_secs(300);
 
     loop {
-        match find_window_pos(process_name) {
-            Some(rect) => {
-                let x = (rect.left + rect.right) as f64 / 2.0;
-                let y = (rect.top + rect.bottom) as f64 / 2.0;
+        if is_window_active(process_name){
+            match find_window_pos(process_name) {
+                Some(rect) => {
+                    let x = (rect.left + rect.right) as f64 / 2.0;
+                    let y = (rect.top + rect.bottom) as f64 / 2.0;
 
-                match click_at(x, y) {
-                    Ok(()) => println!("Clicked on {} at ({}, {})", process_name, x, y),
-                    Err(e) => println!("Failed to click at ({}, {}): {:?}", x, y, e),
+                    match click_at(x, y) {
+                        Ok(()) => {
+                            println!("Clicked on {} at ({}, {})", process_name, x, y);
+                        },
+                        Err(e) => {
+                            println!("Failed to click at ({}, {}): {:?}", x, y, e);
+                        },
+                    }
                 }
+                None => {
+                    println!("{} not found.", process_name);
+                },
             }
-            None => println!("{} not found.", process_name),
         }
 
         thread::sleep(wait_duration);

@@ -1,2 +1,3 @@
-# BananaExeAFKClicker
-Banana.exe AFK Clicker
+# Banana.exe AFK Clicker
+
+Feel free to add whatever you want ^^

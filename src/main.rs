@@ -4,8 +4,12 @@ use winapi::um::winuser::{FindWindowA, GetForegroundWindow, GetWindowRect};
 use winapi::shared::windef::RECT;
 use std::ptr::null_mut;
 use std::ffi::CString;
+//use std::process::Command;
 
 // TODO: make this an "app"
+// TODO: REMOVE THE RIGHT TO WRITE IN THE CMD
+// TODO: make a proper CMD
+// TODO: ON CLOSE OF THE CMD CLOSE THE PROGRAM
 
 fn find_window_pos(window_name: &str) -> Option<RECT> {
     unsafe {
@@ -27,7 +31,11 @@ fn find_window_pos(window_name: &str) -> Option<RECT> {
 
 fn is_window_active(window_name: &str) -> bool {
     unsafe {
-        let cstr = CString::new(window_name).ok()?;
+        let cstr = match CString::new(window_name) {
+            Ok(cstr) => cstr,
+            Err(_) => return false,
+        };
+
         let target_h_w_n_d = FindWindowA(null_mut(), cstr.as_ptr());
 
         if target_h_w_n_d.is_null() {
@@ -47,12 +55,16 @@ fn click_at(x: f64, y: f64) -> Result<(), SimulateError> {
 }
 
 fn main() {
+    /*Command::new("cmd")
+        .args(&["/C", "start", "cmd", "/K", "echo Log output:"])
+        .spawn()
+        .expect("Failed to open CMD");*/
 
     let process_name = "Banana";
     let wait_duration = Duration::from_secs(300);
 
     loop {
-        if is_window_active(process_name){
+        if is_window_active(process_name) {
             match find_window_pos(process_name) {
                 Some(rect) => {
                     let x = (rect.left + rect.right) as f64 / 2.0;
@@ -71,6 +83,8 @@ fn main() {
                     println!("{} not found.", process_name);
                 },
             }
+        } else {
+            println!("{} is not the active window.", process_name);
         }
 
         thread::sleep(wait_duration);

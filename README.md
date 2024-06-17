@@ -1,3 +1,5 @@
 # Banana.exe AFK Clicker
 
-Feel free to add whatever you want ^^
+Feel free to add whatever you want ^^ with your own fork or in PR
+
+# SCAMMING THE SCAMMERS
